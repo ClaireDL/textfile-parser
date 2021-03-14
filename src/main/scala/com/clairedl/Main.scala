@@ -4,10 +4,6 @@ import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 object Main extends App {
-  case class Ingredient(name: String, calories: Int, weight: Double) {
-    override def toString(): String = s"Ingredient: $name, Calories/100g: $calories, Quantity used: $weight"
-  }
-
   abstract class Converter[A] {
     def convert(elements: List[String]): A
   }
@@ -23,11 +19,25 @@ object Main extends App {
     file.map(x => converter.convert(x))
   }
 
-  class ConvertIngredients extends Converter[Ingredient] {
-    def convert(group: List[String]): Ingredient = Ingredient(group(0), group(1).toInt, group(2).toDouble)
+  case class Ingredient(name: String, calories: Int, weight: Double) {
+    override def toString(): String = s"Ingredient: $name, Cal./100g: $calories, Quant. in g: $weight"
   }
 
-  val converter = new ConvertIngredients
+  class ConverterIngredients extends Converter[Ingredient] {
+    def convert(content: List[String]): Ingredient = Ingredient(content(0), content(1).toInt, content(2).toDouble)
+  }
+
+  val converter = new ConverterIngredients
   val result = loadAndConvert("ragu.txt", converter, 3)
   result.foreach(println)
+
+  case class Partygoer(name: String, drink: String, age: Int)
+
+  class ConverterParticipants extends Converter[Partygoer] {
+    def convert(details: List[String]): Partygoer = Partygoer(details(0), details(1), details(2).toInt)
+  }
+
+  val converterParty = new ConverterParticipants
+  val guestList = loadAndConvert("partycipants.txt", converterParty, 3)
+  guestList.foreach(println)
 }
