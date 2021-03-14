@@ -5,11 +5,7 @@ ThisBuild / organizationName := "example"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "Template",
-    libraryDependencies ++= Seq(
-      "com.typesafe" % "config" % "1.4.0",
-      "ch.qos.logback" % "logback-classic" % "1.2.3",
-    ),
+    name := "TextfileParser",
     exportJars := true
   )
 

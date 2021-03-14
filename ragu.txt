@@ -1,0 +1,12 @@
+mince
+130
+500
+tomatoes
+40
+800
+oil
+800
+60
+soffritto
+15
+70
