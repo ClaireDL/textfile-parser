@@ -37,33 +37,58 @@ object Main extends App {
   //
   // Exercise 2: structure is variable: under 18 years old have a 4th line, parent name
   //
-  abstract class Person(name: String, drink: String, age: Int)
 
-  case class Adult(name: String, drink: String, age: Int) extends Person(name, drink, age)
-  case class Minor(name: String, drink: String, age: Int, parentName: String) extends Person(name, drink, age)
+  case class Person(name: String, drink: String, age: Int, parentName: String)
 
-  val file3 = Source
-    .fromFile("partycipants2.txt")
-    .getLines()
-    .toList
+  object Person {
+    def apply(name: String, drink: String, age: Int): Person = Person(name, drink, age, "")
+  }
 
-  val result = new ListBuffer[Person]
+  // val file3 = Source
+  //   .fromFile("partycipants2.txt")
+  //   .getLines()
+  //   .toList
 
-  def isNumber(line: String): Boolean = line.matches("[0-9]+")
+  // val result = new ListBuffer[Person]
 
-  for (line <- 2 to file3.length -1) {
-    if (isNumber(file3(line))) {
-      file3(line).toInt match {
-        case x if (x < 18)  => {
-          result += Minor(file3(line - 2), file3(line - 1), file3(line).toInt, file3(line + 1))
-        }
-        case x if (x >= 18) => {
-          result += Adult(file3(line - 2), file3(line - 1), file3(line).toInt)
-        }
+  // def isNumber(line: String): Boolean = line.matches("[0-9]+")
+
+  // for (line <- 2 to file3.length -1) {
+  //   if (isNumber(file3(line))) {
+  //     file3(line).toInt match {
+  //       case x if (x < 18)  =>
+  //         result += Person(file3(line - 2), file3(line - 1), file3(line).toInt, file3(line + 1))
+
+  //       case x if (x >= 18) =>
+  //         result += Person(file3(line - 2), file3(line - 1), file3(line).toInt)
+  //     }
+  //   }
+  // }
+
+  // val parsed = result.toList
+  // parsed.map(x => println(x.name))
+  // parsed.foreach(println)
+
+  //
+  // Exercise 3: load one line at a time
+  //
+
+  val result2 = new ListBuffer[Person].empty
+  var buffer = new ListBuffer[String].empty
+
+  for (line <- Source.fromFile("partycipants2.txt").getLines()) {
+    buffer += line
+    if (buffer.length == 4) {
+      if (buffer(2).toInt < 18) {
+        result2 += Person(buffer(0), buffer(1), buffer(2).toInt, buffer(3))
+        buffer = ListBuffer()
+      }
+      else {
+        result2 += Person(buffer(0), buffer(1), buffer(2).toInt)
+        buffer = ListBuffer(buffer(3))
       }
     }
   }
-
-  result.toList
-  result.foreach(println)
+  result2.toList
+  result2.foreach(println)
 }
