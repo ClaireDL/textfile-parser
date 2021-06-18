@@ -146,12 +146,12 @@ object Main extends App {
   }
 
   val resultCheckAge = checkAgeRec(source, List[String](), List[Person]())
-  println(resultCheckAge)
+  // println(resultCheckAge)
 
   // Working on foldLeft
-  @tailrec
   val priceList = List(15.99, 12.00, 20)
 
+  @tailrec
   def sumAndConvert(input: List[Double], conversion: Double, accumulator: Double): Double = {
     if (input.isEmpty) accumulator
     else {
@@ -167,41 +167,60 @@ object Main extends App {
   println(s"total with built-in: $totalWithBuiltIn")
 
   val totalFoldLeft = priceList.foldLeft(0.0)(_ + _ * 0.8698)
-  println(s"total with foldLeft: $totalFoldLeft")
+  // println(s"total with foldLeft: $totalFoldLeft")
 
   // Generalising the transformation
 
   // Using Strategy pattern
-  abstract class Transformation[A, B](currentValue: A, accumulator: B) {
-    def transform(): B
+  abstract class Transformation[A, B] {
+    def updateAccumulator(currentValue: A, acc: B): B
   }
 
-  class SumAndConvert(currentValue: Double, accumulator: Double, exchangeRate: Double) extends Transformation(currentValue, accumulator) {
-    def transform(): Double = accumulator + currentValue * exchangeRate
-  }
-
-  def listTransformationStrategy[A, B](input: List[A], transformation: Transformation[A, B], accumulator: B): B = {
-    if (input.isEmpty) accumulator
-    else {
-      listTransformationStrategy(input.drop(1), transformation, transformation.transform())
+  class SumAndConvert(exchangeRate: Double) extends Transformation[Double, Double] {
+    def updateAccumulator(currentValue: Double, acc: Double): Double = {acc + currentValue * exchangeRate
     }
   }
+
+  class ConvertWithCurrency(exchangeRate: Double, currency: String) extends Transformation[Double, List[String]] {
+    def updateAccumulator(currentValue: Double, acc: List[String]): List[String] = {
+      val converted = s"${currentValue * exchangeRate} $currency"
+      converted :: acc
+    }
+  }
+
+  class ListTransformationStrategy[A, B](input: List[A], transformation: Transformation[A, B], accumulator: B) {
+    def transform(): B = {
+      if (input.isEmpty) accumulator
+      else {
+        val newAcc = transformation.updateAccumulator(input(0), accumulator)
+        val updated = new ListTransformationStrategy[A, B](input.drop(1), transformation, newAcc)
+        updated.transform()
+      }
+    }
+  }
+
+  val updateWalletStrategy = new ListTransformationStrategy[Double, Double](priceList, new SumAndConvert(0.8698), 0.0).transform()
+  println(s"With strategy pattern, total sum is: ${updateWalletStrategy}")
+  val convertedWithCurrency = new ListTransformationStrategy[Double, List[String]](priceList, new ConvertWithCurrency(0.8698, "£"), List[String]()).transform()
+  println(s"List of prices in Pound Sterling: $convertedWithCurrency")
 
   // Using functions
 
   // I need a Transformation with this A and this B
-  def listTransformationFunc[A, B](input: List[A], transformation: (A, B) => B, accumulator: B): B = {
-    if (input.isEmpty) accumulator
-    else {
-      val updateAcc: B = transformation(input(0), accumulator)
-      listTransformationFunc(input.drop(1), transformation, updateAcc)
-    }
+  // def listTransformationFunc[A, B](input: List[A], transformation: (A, B, B) => B, accumulator: B): B = {
+  //   if (input.isEmpty) accumulator
+  //   else {
+  //     listTransformationFunc(input.drop(1), transformation, transformation)
+  //   }
+  // }
+
+  // This is a function
+  val sumAndConvertFunc: (Double, Double, Double) => Double = {
+    (currentValue, exchangeRate, accumulator) => accumulator + currentValue * exchangeRate
   }
+  // val updateWalletFunc = listTransformationFunc(priceList, sumAndConvertFunc, 0.0)
+  // println(s"Using functions: $updateWalletFunc")
 
-  val sumAndConvertFunc = (currentValue: Double, exchangeRate: Double) => currentValue * exchangeRate
-
-  // val updateWalletFunc = listTransformationFunc(priceList, sumAndConvertFunc(priceList(0), 0.8698), 0)
-  // println(updateWalletFunc)
-
-  val updateWalletStra = listTransformationStrategy(priceList, new SumAndConvert(priceList(0), 0, 0.8698), 0)
+  // This is a method
+  def myFunctop(currentValue: Double, exchangeRate: Double) = currentValue * exchangeRate
 }
